@@ -177,9 +177,9 @@ public class Chapter02Test {
         Stream<Integer> s = Stream.of(1, 2, 3, 4, 4, 5, 5);
         Map<Integer, Integer> m1 = s.collect(
                 Collectors.toMap(
-                        x -> x,
-                        x -> x,
-                        (x, y) -> x + y
+                        x -> x,  // key mapping
+                        x -> x,  // value mapping
+                        (x, y) -> x + y // merge function for duplicate keys
                 )
         );
         System.out.println(m1);
@@ -198,6 +198,16 @@ public class Chapter02Test {
         );
         System.out.println(m2);
         assertEquals(2, m2.get("A").size());
+    }
+
+    @Test
+    public void collect_groupBy() {
+        Stream<Integer> s = Stream.iterate(0, n -> n + 1).limit(100);
+        Map<Integer, Set<Integer>> m = s.collect(
+                Collectors.groupingBy(
+                        (x) -> x % 2,         // classifier to discriminate values of the stream
+                        Collectors.toSet())   // downstream to say what to do with the discriminated values
+        );
     }
 
     @Test
