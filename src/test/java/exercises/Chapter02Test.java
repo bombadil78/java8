@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -102,9 +103,16 @@ public class Chapter02Test {
     // Reductions
     @Test
     public void reduction_general() {
-        Stream<Integer> i = Stream.of(1, 2, 3);
+        Stream<Integer> i = Stream.iterate(1, n -> 1).limit(100000000);
         Integer sum = i.reduce(0, (x, y) -> x + y); // identity value and accumulator
-        assertEquals(6, sum.intValue());
+        assertEquals(100000000, sum.intValue());
+    }
+
+    @Test
+    public void reduction_generalAndParallel() {
+        Stream<Integer> i = Stream.iterate(1, n -> 1).limit(100000000);
+        Integer sum = i.parallel().reduce(0, (x, y) -> x + y, (x, y) -> x + y); // why so slow?
+        assertEquals(100000000, sum.intValue());
     }
 
     @Test
@@ -115,6 +123,81 @@ public class Chapter02Test {
         boolean doesNotContainEven = ii.map(x -> x%2 == 0).reduce(false, (x, y) -> x || y);
         assertTrue(containsEven);
         assertFalse(doesNotContainEven);
+    }
+
+    // Collections: supply, accumulate & combine
+    @Test
+    public void collect() {
+        Stream<Integer> s = Stream.iterate(0, n -> n + 1).limit(100);
+        Stream<Integer> ss = Stream.iterate(0, n -> n + 1).limit(100);
+        // supplier = supply some object with state
+        // accumulater = biconsumer with some object as first and type of stream as second argument
+        //               used to accumulate type into supplier => BiConsumer<SomeType, Supplier>
+        // combiner = biconsumer that combines suppliers => BiConsumer<Supplier, Supplier>
+        StringBuilder sb = s
+                .map(x -> x.toString())
+                .collect(
+                        StringBuilder::new,
+                        StringBuilder::append,
+                        StringBuilder::append
+                );
+        assertNotNull(sb.toString());
+        List<Integer> ints = ss
+                .collect(
+                        ArrayList::new,
+                        ArrayList::add,
+                        ArrayList::addAll
+                );
+        assertEquals(100, ints.size());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void collect_convenienceMethods() {
+        Stream<Integer> s1 = Stream.of(1, 1, 2, 3, 4, 4, 5);
+        assertEquals(5, s1.collect(Collectors.toSet()).size());
+
+        Stream<Integer> s2 = Stream.of(1, 2, 3);
+        assertEquals(3, s2.collect(Collectors.toList()).size());
+
+        // toMap(keyMapper, valueMapper); both mappers are Function<T, U> that map stream types to possibly other types
+        Stream<Integer> s3 = Stream.of(1, 2, 3);
+        Map<Integer, Integer> m = s3.collect(Collectors.toMap((x) -> x, (x) -> x * x));
+        System.out.println(m);
+        assertEquals(1, m.get(1).intValue());
+        assertEquals(4, m.get(2).intValue());
+        assertEquals(9, m.get(3).intValue());
+
+        // toMap() throws exception if duplicate keys are inserted!!
+        Stream<Integer> s4 = Stream.of(1, 2, 3, 1);
+        Map<Integer, Integer> m2 = s4.collect(Collectors.toMap((x) -> x, (x) -> x * x));
+    }
+
+    @Test
+    public void collect_intoMap_withDuplicateKeys() {
+        Stream<Integer> s = Stream.of(1, 2, 3, 4, 4, 5, 5);
+        Map<Integer, Integer> m1 = s.collect(
+                Collectors.toMap(
+                        x -> x,
+                        x -> x,
+                        (x, y) -> x + y
+                )
+        );
+        System.out.println(m1);
+
+        Stream<String> ss = Stream.of("A", "A", "B", "C");
+        Map<String, List<String>> m2 = ss.collect(
+                Collectors.toMap(
+                        x -> x,
+                        x -> Collections.singletonList(x.toLowerCase()),
+                        (x, y) -> {
+                            List<String> union = new ArrayList<>(x);
+                            union.addAll(y);
+                            return union;
+                        }
+                )
+        );
+        System.out.println(m2);
+        assertEquals(2, m2.get("A").size());
     }
 
     @Test
