@@ -6,10 +6,13 @@ import excercises.chapter03.Pictures;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
-public class PicturesTest {
+import static junit.framework.TestCase.assertEquals;
+
+public class LambdaAndGenericsTest {
 
     @Test
     public void compose_test() {
@@ -21,7 +24,7 @@ public class PicturesTest {
         // Pictures.transform(myImage, Pictures.compose(op1, op2)); is OK
 
         // #2) compiles, but gives class cast exception => illegal downcast
-        Pictures.transform(myImage, (UnaryOperator<MyColor>) op1.compose(op2));
+        // Pictures.transform(myImage, (UnaryOperator<MyColor>) op1.compose(op2));
 
         // UnaryOperator<T> extends Function<T, T> while Function<T, T> offers Function<T, T> compose(...)
     }
@@ -40,11 +43,23 @@ public class PicturesTest {
         // printStringCollection(someIntList); => does not compile
     }
 
+    @Test
+    public void someReduceTest() {
+        List<String> list = new ArrayList<>(Arrays.asList("1", "2", "3"));
+        Integer sum = list.stream()
+                .reduce(
+                        0,
+                        (acc, element) -> acc + Integer.parseInt(element),
+                        (part0, part1) -> part0 + part1
+                );
+        assertEquals(6, sum.intValue());
+    }
+
     private static <T> void printSize(Collection<T> collection) {
         System.out.println(collection.size());
     }
 
     private static <T> void printStringCollection(Collection<? extends String> collection) {
-
+        // do nth
     }
 }
