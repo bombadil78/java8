@@ -1,5 +1,6 @@
 package exercises.chapter03;
 
+import excercises.chapter03.LambdaAndGenerics;
 import excercises.chapter03.MyColor;
 import excercises.chapter03.MyImage;
 import excercises.chapter03.Pictures;
@@ -10,6 +11,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+import static excercises.chapter03.LambdaAndGenerics.map;
 import static junit.framework.TestCase.assertEquals;
 
 public class LambdaAndGenericsTest {
@@ -41,6 +43,18 @@ public class LambdaAndGenericsTest {
         printStringCollection(someList);
         printStringCollection(new HashSet<>(someList));
         // printStringCollection(someIntList); => does not compile
+    }
+
+    @Test
+    public void convertGenericLists() {
+        List<String> s = new ArrayList<>(Arrays.asList("1", "2", "3"));
+        List<Integer> i = map(
+                s,
+                (x) -> {
+                    Integer val = Integer.valueOf(x);
+                    return 2 * val;
+                });
+        assertEquals(Arrays.asList(2, 4, 6), i);
     }
 
     @Test
