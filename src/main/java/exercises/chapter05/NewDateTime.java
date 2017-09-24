@@ -1,7 +1,6 @@
 package exercises.chapter05;
 
-import java.time.LocalDate;
-import java.time.Period;
+import java.time.*;
 import java.time.temporal.TemporalAdjuster;
 import java.util.function.Predicate;
 
@@ -21,5 +20,9 @@ public class NewDateTime {
             } while (!someDate.test(myDate));
             return myDate;
         };
+    }
+
+    public static LocalDateTime getArrival(ZonedDateTime from, Duration duration, ZoneId toTimeZone) {
+        return from.plus(duration).withZoneSameInstant(toTimeZone).toLocalDateTime();
     }
 }
